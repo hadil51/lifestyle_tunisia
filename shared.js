@@ -404,26 +404,35 @@ function mergeContent(base, saved) {
 }
 
 async function loadContent() {
+  const cached = loadCachedContent();
+  const remote = await loadRemoteContent();
+  return remote || cached;
+}
+
+function loadCachedContent() {
   const base = defaultContent();
-  if (isSupabaseConfigured()) {
-    try {
-      const remote = await fetchSupabaseContent();
-      if (remote) {
-        const merged = mergeContent(base, remote);
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
-        return merged;
-      }
-    } catch (error) {
-      console.error("Failed to load content from Supabase:", error);
-    }
-  }
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return base;
     return mergeContent(base, JSON.parse(raw));
   } catch (error) {
-    console.error("Failed to load content:", error);
+    console.error("Failed to load cached content:", error);
     return base;
+  }
+}
+
+async function loadRemoteContent() {
+  if (!isSupabaseConfigured()) return null;
+  const base = defaultContent();
+  try {
+    const remote = await fetchSupabaseContent();
+    if (!remote) return null;
+    const merged = mergeContent(base, remote);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+    return merged;
+  } catch (error) {
+    console.error("Failed to load content from Supabase:", error);
+    return null;
   }
 }
 
@@ -475,18 +484,22 @@ function resolveProductMediaType(product) {
   return "image";
 }
 
-function buildProductMediaHtml(product) {
+function buildProductMediaHtml(product, options = {}) {
   const url = normalizeAssetPath(product.image || "");
+  const loading = options.loading || "lazy";
+  const fetchpriority = options.fetchpriority ? ` fetchpriority="${options.fetchpriority}"` : "";
   if (resolveProductMediaType(product) === "video") {
     return `<video class="product-media" src="${escapeHtml(url)}" autoplay muted loop playsinline></video>`;
   }
-  return `<img class="product-media" src="${escapeHtml(url)}" alt="${escapeHtml(product.name)}" loading="lazy" />`;
+  return `<img class="product-media" src="${escapeHtml(url)}" alt="${escapeHtml(product.name)}" loading="${loading}" decoding="async"${fetchpriority} />`;
 }
 
-function buildMediaHtml(item, className = "media-fill") {
+function buildMediaHtml(item, className = "media-fill", options = {}) {
   const type = resolveMediaType(item);
   const url = normalizeAssetPath(item.mediaUrl || "");
   const pos = mediaPosition(item);
+  const loading = options.loading || "lazy";
+  const fetchpriority = options.fetchpriority ? ` fetchpriority="${options.fetchpriority}"` : "";
 
   if (type === "instagram") {
     const embed = getInstagramEmbedUrl(item.mediaUrl);
@@ -503,5 +516,5 @@ function buildMediaHtml(item, className = "media-fill") {
     return `<video class="${className}" style="object-position:${pos}" src="${escapeHtml(url)}" poster="${escapeHtml(poster)}" ${autoplay ? "autoplay" : ""} ${muted ? "muted" : ""} ${loop ? "loop" : ""} ${playsinline ? "playsinline" : ""} controls></video>`;
   }
 
-  return `<img class="${className}" style="object-position:${pos}" src="${escapeHtml(url)}" alt="" loading="lazy" />`;
+  return `<img class="${className}" style="object-position:${pos}" src="${escapeHtml(url)}" alt="" loading="${loading}" decoding="async"${fetchpriority} />`;
 }

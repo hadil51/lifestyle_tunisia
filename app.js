@@ -13,8 +13,9 @@ function renderNavigation(navItems) {
 function renderHeroBanner(banner) {
   const el = document.getElementById("heroBanner");
   const overlay = Math.max(0, Math.min(0.85, Number(banner.overlayOpacity) || 0.45));
+  const eager = { loading: "eager", fetchpriority: "high" };
   el.innerHTML = `
-    <div class="tile-media">${buildMediaHtml(banner)}</div>
+    <div class="tile-media">${buildMediaHtml(banner, "media-fill", eager)}</div>
     <div class="tile-overlay" style="background:rgba(0,0,0,${overlay})"></div>
     <div class="tile-content">
       <h1>${escapeHtml(banner.title)}</h1>
@@ -28,9 +29,9 @@ function renderCategoryTiles(tiles) {
   const wrap = document.getElementById("categoryTiles");
   wrap.innerHTML = tiles
     .map(
-      (tile) => `
+      (tile, index) => `
     <a class="category-tile reveal" href="${escapeHtml(tile.link || "#")}">
-      <div class="tile-media">${buildMediaHtml(tile)}</div>
+      <div class="tile-media">${buildMediaHtml(tile, "media-fill", index === 0 ? { loading: "eager", fetchpriority: "high" } : { loading: "eager" })}</div>
       <div class="tile-overlay"></div>
       <div class="tile-content">
         <h3>${escapeHtml(tile.title)}</h3>
@@ -42,11 +43,12 @@ function renderCategoryTiles(tiles) {
     .join("");
 }
 
-function renderProductCard(product) {
+function renderProductCard(product, index = 0) {
+  const mediaOptions = index < 4 ? { loading: "eager" } : { loading: "lazy" };
   return `
     <article class="product-card">
       <div class="product-image-wrap">
-        ${buildProductMediaHtml(product)}
+        ${buildProductMediaHtml(product, mediaOptions)}
         <div class="product-actions">
           <span title="View">👁</span>
           <span title="Favorite">★</span>
@@ -69,7 +71,7 @@ function renderProductSections(sections, products) {
   wrap.innerHTML = sections
     .map((section) => {
       const sectionProducts = products.filter((p) => p.section === section.key);
-      const cards = sectionProducts.map(renderProductCard).join("");
+      const cards = sectionProducts.map((product, index) => renderProductCard(product, index)).join("");
       return `
       <section id="men-${escapeHtml(section.key)}" class="section product-section reveal">
         <div class="container">
@@ -225,14 +227,18 @@ function renderFooter(footer, site) {
   `;
 }
 
+let carouselsReady = false;
+
 function setupCarousels() {
-  document.querySelectorAll(".carousel-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const target = document.getElementById(btn.dataset.target);
-      if (!target) return;
-      const amount = target.clientWidth * 0.85;
-      target.scrollBy({ left: btn.classList.contains("prev") ? -amount : amount, behavior: "smooth" });
-    });
+  if (carouselsReady) return;
+  carouselsReady = true;
+  document.body.addEventListener("click", (event) => {
+    const btn = event.target.closest(".carousel-btn");
+    if (!btn) return;
+    const target = document.getElementById(btn.dataset.target);
+    if (!target) return;
+    const amount = target.clientWidth * 0.85;
+    target.scrollBy({ left: btn.classList.contains("prev") ? -amount : amount, behavior: "smooth" });
   });
 }
 
@@ -246,17 +252,25 @@ function setupRevealAnimations() {
         }
       });
     },
-    { threshold: 0.1, rootMargin: "0px 0px -40px 0px" }
+    { threshold: 0.05, rootMargin: "0px 0px -20px 0px" }
   );
-  document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+  document.querySelectorAll(".reveal").forEach((el) => {
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight * 1.05) {
+      el.classList.add("visible");
+    }
+    io.observe(el);
+  });
 }
 
-async function render() {
-  const content = await loadContent();
-
+function renderPage(content) {
   document.getElementById("brandName").textContent = content.site.brandName;
   document.getElementById("brandSubtitle").textContent = content.site.brandSubtitle;
-  document.getElementById("brandLogo").src = normalizeAssetPath(content.site.logoUrl);
+  const logo = document.getElementById("brandLogo");
+  logo.loading = "eager";
+  logo.decoding = "async";
+  logo.fetchPriority = "high";
+  logo.src = normalizeAssetPath(content.site.logoUrl);
   document.getElementById("announcementBar").textContent = content.site.announcement;
 
   renderNavigation(content.navigation);
@@ -273,4 +287,10 @@ async function render() {
   setupRevealAnimations();
 }
 
-render();
+async function init() {
+  renderPage(loadCachedContent());
+  const fresh = await loadRemoteContent();
+  if (fresh) renderPage(fresh);
+}
+
+init();

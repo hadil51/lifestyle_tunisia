@@ -7,6 +7,8 @@
     <meta name="description" content="Premium men's clothing brand in Tunisia." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://picsum.photos" crossorigin />
+    <link rel="dns-prefetch" href="https://xsoimvyaolpskcioejwa.supabase.co" />
     <link
       href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300&display=swap"
       rel="stylesheet"
@@ -17,7 +19,7 @@
     <header class="site-header">
       <div class="container header-inner">
         <a class="brand" href="#home">
-          <img id="brandLogo" src="assets/brand-logo-reference.png" alt="logo" />
+          <img id="brandLogo" src="assets/brand-logo-reference.png" alt="logo" loading="eager" fetchpriority="high" decoding="async" />
           <span class="brand-text">
             <strong id="brandName">lifestyle_tunisia</strong>
             <small id="brandSubtitle">Life style brand</small>
@@ -30,7 +32,7 @@
     </header>
 
     <main id="home">
-      <section class="hero-grid container reveal">
+      <section class="hero-grid container reveal visible">
         <article id="heroBanner" class="hero-banner"></article>
         <div id="categoryTiles" class="category-tiles"></div>
       </section>
