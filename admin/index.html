@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - lifestyle_tunisia</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="admin.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="top">
+        <div>
+          <h1>Admin — lifestyle_tunisia</h1>
+          <p class="hint">
+            Edit everything: logo, texts, images, videos &amp; Instagram Reels.
+            Paste URLs like:
+            <code>https://www.instagram.com/reel/DTLdfkrDbk0/</code>
+          </p>
+        </div>
+        <a class="link" href="/">Open Website</a>
+      </header>
+
+      <form id="adminForm" class="grid">
+        <section class="panel">
+          <h2>Brand &amp; Logo</h2>
+          <div class="row">
+            <label>Brand Name <input name="site.brandName" /></label>
+            <label>Brand Subtitle <input name="site.brandSubtitle" /></label>
+            <label>Announcement Bar <input name="site.announcement" /></label>
+            <label>Logo URL <input name="site.logoUrl" placeholder="assets/logo.png or https://..." /></label>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Navigation Links</h2>
+          <div id="navList"></div>
+          <button type="button" id="addNav" class="accent">Add Nav Link</button>
+        </section>
+
+        <section class="panel">
+          <h2>Hero Banner (Large Left Tile)</h2>
+          <div class="row">
+            <label>
+              Media Type
+              <select name="heroBanner.mediaType">
+                <option value="image">Image</option>
+                <option value="video">Video (mp4 URL)</option>
+                <option value="instagram">Instagram Reel</option>
+              </select>
+            </label>
+            <label>Media URL <input name="heroBanner.mediaUrl" placeholder="image, video or Instagram reel URL" /></label>
+            <label>Video Poster URL <input name="heroBanner.videoPoster" placeholder="optional poster image URL" /></label>
+            <label>Focus X (%) <input type="number" min="0" max="100" name="heroBanner.focusX" /></label>
+            <label>Focus Y (%) <input type="number" min="0" max="100" name="heroBanner.focusY" /></label>
+            <label>Overlay Opacity (0–0.85) <input type="number" step="0.01" min="0" max="0.85" name="heroBanner.overlayOpacity" /></label>
+          </div>
+          <div class="row">
+            <label>
+              Upload From Desktop (image/video)
+              <input id="heroBannerUpload" type="file" accept="image/*,video/*" />
+            </label>
+            <label>
+              <input type="checkbox" name="heroBanner.autoplay" />
+              Autoplay video
+            </label>
+            <label>
+              <input type="checkbox" name="heroBanner.loop" />
+              Loop video (boucle)
+            </label>
+            <label>
+              <input type="checkbox" name="heroBanner.muted" />
+              Mute video
+            </label>
+          </div>
+          <div class="row">
+            <label>Title <input name="heroBanner.title" /></label>
+            <label>Subtitle <textarea name="heroBanner.subtitle"></textarea></label>
+            <label>Button Text <input name="heroBanner.ctaText" /></label>
+            <label>Button Link <input name="heroBanner.ctaLink" placeholder="#men-latest" /></label>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Category Tiles (4 boxes — all Men's)</h2>
+          <div id="categoryTilesList"></div>
+        </section>
+
+        <section class="panel">
+          <h2>Product Section Titles</h2>
+          <div id="productSectionsList"></div>
+        </section>
+
+        <section class="panel">
+          <h2>Featured Video / Instagram Reel</h2>
+          <div class="row">
+            <label>
+              Media Type
+              <select name="featuredVideo.mediaType">
+                <option value="image">Image</option>
+                <option value="video">Video (mp4 URL)</option>
+                <option value="instagram">Instagram Reel</option>
+              </select>
+            </label>
+            <label>
+              Media URL
+              <input
+                name="featuredVideo.mediaUrl"
+                placeholder="https://www.instagram.com/reel/DTLdfkrDbk0/"
+              />
+            </label>
+            <label>Height (px: 280–800) <input type="number" min="280" max="800" name="featuredVideo.height" /></label>
+            <label>Focus X (%) <input type="number" min="0" max="100" name="featuredVideo.focusX" /></label>
+            <label>Focus Y (%) <input type="number" min="0" max="100" name="featuredVideo.focusY" /></label>
+          </div>
+          <div class="row">
+            <label>Section Title <input name="featuredVideo.title" /></label>
+            <label>Section Subtitle <input name="featuredVideo.subtitle" /></label>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Explore Section</h2>
+          <div class="row">
+            <label>Title <input name="explore.title" /></label>
+            <label>CTA Button Text <input name="explore.ctaText" /></label>
+            <label>Paragraph 1 <textarea name="explore.paragraph1"></textarea></label>
+            <label>Quote <textarea name="explore.quote"></textarea></label>
+            <label>Paragraph 2 <textarea name="explore.paragraph2"></textarea></label>
+          </div>
+          <h3>Explore Tiles (4)</h3>
+          <div id="exploreTilesList"></div>
+        </section>
+
+        <section class="panel">
+          <h2>Social Media Grid</h2>
+          <div class="row">
+            <label>Title <input name="social.title" /></label>
+            <label>Subtitle <input name="social.subtitle" /></label>
+          </div>
+          <div id="socialList"></div>
+          <button type="button" id="addSocial" class="accent">Add Social Item</button>
+        </section>
+
+        <section class="panel">
+          <h2>Newsletter &amp; Contact</h2>
+          <div class="row">
+            <label>Title <input name="newsletter.title" /></label>
+            <label>Subtitle <input name="newsletter.subtitle" /></label>
+            <label>Store Location <input name="newsletter.storeLocation" /></label>
+            <label>Phone <input name="newsletter.phone" /></label>
+            <label>Office Location <input name="newsletter.officeLocation" /></label>
+            <label>Work Hours <input name="newsletter.workHours" /></label>
+            <label>Email <input name="newsletter.email" /></label>
+            <label>Social Links <input name="newsletter.socialLinks" /></label>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Footer</h2>
+          <div class="row">
+            <label>Address <input name="footer.address" /></label>
+            <label>Email <input name="footer.email" /></label>
+            <label>Phone <input name="footer.phone" /></label>
+            <label>Copyright <input name="footer.copyright" /></label>
+            <label>Col 2 Title <input name="footer.col2Title" /></label>
+            <label>Col 2 Links (comma separated) <input name="footer.col2Links" /></label>
+            <label>Col 3 Title <input name="footer.col3Title" /></label>
+            <label>Col 3 Links <input name="footer.col3Links" /></label>
+            <label>Col 4 Title <input name="footer.col4Title" /></label>
+            <label>Col 4 Links <input name="footer.col4Links" /></label>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Products Manager (48+ men's products)</h2>
+          <div class="row">
+            <label>
+              Filter by section
+              <select id="productFilter">
+                <option value="">All</option>
+                <option value="latest">Men's Latest</option>
+                <option value="formal">Men's Formal</option>
+                <option value="casual">Men's Casual</option>
+                <option value="street">Men's Street</option>
+              </select>
+            </label>
+          </div>
+          <div id="productsList"></div>
+          <div class="actions">
+            <button type="button" id="addProduct" class="accent">Add Product</button>
+          </div>
+        </section>
+
+        <section class="panel sticky-save">
+          <div class="actions">
+            <button type="submit" class="accent">Save All Changes</button>
+            <button type="button" id="resetDefault" class="secondary">Reset to Default</button>
+            <button type="button" id="exportJson" class="secondary">Export JSON</button>
+            <button type="button" id="importJsonBtn" class="secondary">Import JSON</button>
+            <button type="button" id="clearStorage" class="danger">Clear Saved Data</button>
+          </div>
+          <label>
+            Paste JSON to import
+            <textarea id="importJsonText" rows="6"></textarea>
+          </label>
+          <div id="status" class="status"></div>
+        </section>
+      </form>
+    </div>
+    <script src="../shared.js"></script>
+    <script src="admin.js"></script>
+  </body>
+</html>
