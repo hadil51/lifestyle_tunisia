@@ -1,12 +1,17 @@
 const STORAGE_KEY = "lifestyle_tunisia_content_v2";
 const SUPABASE_TABLE = "site_content";
 const SUPABASE_ROW_ID = "main";
+const SUPABASE_FALLBACK = {
+  url: "https://xsoimvyaolpskcioejwa.supabase.co",
+  anonKey:
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhzb2ltdnlhb2xwc2tjaW9landhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3MjAxNjAsImV4cCI6MjA5ODI5NjE2MH0.u-k9L6L0AVeIY2HaGxguYdkLpVMSfC3xSWeLxMwTOBs",
+};
 
 function getSupabaseConfig() {
-  const config = window.SUPABASE_CONFIG || {};
+  const config = window.SUPABASE_CONFIG || SUPABASE_FALLBACK;
   return {
-    url: String(config.url || "").replace(/\/+$/, ""),
-    anonKey: String(config.anonKey || ""),
+    url: String(config.url || SUPABASE_FALLBACK.url).replace(/\/+$/, ""),
+    anonKey: String(config.anonKey || SUPABASE_FALLBACK.anonKey),
   };
 }
 
@@ -53,7 +58,10 @@ async function upsertSupabaseContent(content) {
       },
     ]),
   });
-  if (!response.ok) throw new Error(`Supabase write failed (${response.status})`);
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    throw new Error(`Supabase write failed (${response.status})${detail ? `: ${detail}` : ""}`);
+  }
 }
 
 function parseInstagramId(url) {
@@ -349,23 +357,30 @@ async function loadContent() {
 }
 
 async function saveContent(content) {
-  let savedRemotely = false;
+  let remoteSaved = false;
+  let localSaved = false;
+  let error = null;
+
   if (isSupabaseConfigured()) {
     try {
       await upsertSupabaseContent(content);
-      savedRemotely = true;
-    } catch (error) {
-      console.error("Failed to save content to Supabase:", error);
+      remoteSaved = true;
+    } catch (err) {
+      error = err?.message || String(err);
+      console.error("Failed to save content to Supabase:", err);
     }
   }
 
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(content));
-    return true;
-  } catch (error) {
-    console.error("Failed to save content:", error);
-    return savedRemotely;
+    localSaved = true;
+  } catch (err) {
+    if (!error) error = err?.message || String(err);
+    console.error("Failed to save content to local storage:", err);
   }
+
+  const ok = isSupabaseConfigured() ? remoteSaved : localSaved;
+  return { ok, remoteSaved, localSaved, error };
 }
 
 function resolveMediaType(item) {

@@ -23,6 +23,25 @@ function val(v) {
   return String(v ?? "").replace(/"/g, "&quot;");
 }
 
+function formatSaveResult(result) {
+  if (result.ok && result.remoteSaved) {
+    return { text: "Saved to Supabase. Refresh the website to see changes.", isError: false };
+  }
+  if (result.localSaved && !result.remoteSaved && isSupabaseConfigured()) {
+    return {
+      text: `Saved locally only. Supabase sync failed: ${result.error || "unknown error"}`,
+      isError: true,
+    };
+  }
+  if (result.localSaved) {
+    return { text: "Saved locally.", isError: false };
+  }
+  return {
+    text: result.error || "Save failed. Try smaller images or hosted media URLs.",
+    isError: true,
+  };
+}
+
 let state = defaultContent();
 let productFilter = "";
 
@@ -331,38 +350,27 @@ function bindEvents() {
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const saved = await saveContent(state);
-    if (!saved) {
-      setStatus(
-        "Save failed: file too large for browser storage. Use a smaller/compressed video or paste a hosted URL.",
-        true
-      );
-      return;
-    }
-    setStatus("Saved! Website now reads this content from Supabase/local cache.");
+    setStatus("Saving...");
+    const result = await saveContent(state);
+    const message = formatSaveResult(result);
+    setStatus(message.text, message.isError);
   });
 
   document.getElementById("resetDefault").addEventListener("click", async () => {
     state = defaultContent();
     renderAll();
-    const saved = await saveContent(state);
-    if (!saved) {
-      setStatus("Reset done, but could not persist in browser storage.", true);
-      return;
-    }
-    setStatus("Reset to default.");
+    const result = await saveContent(state);
+    const message = formatSaveResult(result);
+    setStatus(message.isError ? `Reset done. ${message.text}` : "Reset to default and saved.", message.isError);
   });
 
   document.getElementById("clearStorage").addEventListener("click", async () => {
     localStorage.removeItem(STORAGE_KEY);
     state = defaultContent();
     renderAll();
-    const saved = await saveContent(state);
-    if (!saved) {
-      setStatus("Local data cleared, but default content could not be synced.", true);
-      return;
-    }
-    setStatus("Saved data cleared and reset to defaults.");
+    const result = await saveContent(state);
+    const message = formatSaveResult(result);
+    setStatus(message.isError ? message.text : "Saved data cleared and reset to defaults.", message.isError);
   });
 
   document.getElementById("exportJson").addEventListener("click", () => {
@@ -378,12 +386,9 @@ function bindEvents() {
     try {
       state = mergeContent(defaultContent(), JSON.parse(text));
       renderAll();
-      const saved = await saveContent(state);
-      if (!saved) {
-        setStatus("Imported, but file set is too large to save in browser storage.", true);
-        return;
-      }
-      setStatus("JSON imported and saved.");
+      const result = await saveContent(state);
+      const message = formatSaveResult(result);
+      setStatus(message.isError ? message.text : "JSON imported and saved.", message.isError);
     } catch {
       setStatus("Invalid JSON.", true);
     }
@@ -391,14 +396,15 @@ function bindEvents() {
 }
 
 async function initAdmin() {
-  renderAll();
+  setStatus("Loading content from Supabase...");
   bindEvents();
   try {
     state = await loadContent();
     renderAll();
     setStatus("Content loaded. Edit and click Save All Changes.");
-  } catch {
-    setStatus("Could not load remote content. Using local/default data.", true);
+  } catch (error) {
+    renderAll();
+    setStatus(`Could not load remote content: ${error?.message || "unknown error"}`, true);
   }
 }
 

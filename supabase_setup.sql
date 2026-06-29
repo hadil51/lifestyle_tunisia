@@ -20,6 +20,7 @@ for insert
 to anon
 with check (id = 'main');
 
+drop policy if exists "public can upsert site content" on public.site_content;
 create policy "public can upsert site content"
 on public.site_content
 for update
