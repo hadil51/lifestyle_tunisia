@@ -65,6 +65,69 @@ function readFileAsDataURL(file) {
   });
 }
 
+function urlFieldRow(inputHtml, targetKey, accept = "image/*,video/*") {
+  return `
+    <div class="url-field-row">
+      ${inputHtml}
+      <label class="upload-btn">
+        Upload
+        <input type="file" accept="${accept}" class="media-upload-input" data-upload-target="${targetKey}" />
+      </label>
+    </div>
+  `;
+}
+
+function labeledUrlField(label, inputHtml, targetKey, accept = "image/*,video/*") {
+  return `<label>${label} ${urlFieldRow(inputHtml, targetKey, accept)}</label>`;
+}
+
+function applyMediaUpload(targetKey, dataUrl, file) {
+  const isVideo = file.type.startsWith("video/");
+  const isImage = file.type.startsWith("image/");
+  const newType = isVideo ? "video" : isImage ? "image" : null;
+  const [locator, ...flags] = targetKey.split("|");
+  const mediaTypeFlag = flags.find((f) => f.startsWith("mediaType:"));
+  const mediaTypeField = mediaTypeFlag ? mediaTypeFlag.slice("mediaType:".length) : null;
+
+  if (locator.startsWith("path:")) {
+    const path = locator.slice(5);
+    setDeep(state, path, dataUrl);
+    if (mediaTypeField && newType) setDeep(state, mediaTypeField, newType);
+    renderFormFields();
+    return;
+  }
+
+  const [kind, indexStr, field] = locator.split(":");
+  const index = Number(indexStr);
+  const targets = {
+    tile: () => state.categoryTiles[index],
+    explore: () => state.explore.tiles[index],
+    social: () => state.social.items[index],
+    product: () => state.products[index],
+  };
+  const item = targets[kind]?.();
+  if (!item) return;
+
+  item[field] = dataUrl;
+  if (mediaTypeField && newType) item[mediaTypeField] = newType;
+
+  const renderers = {
+    tile: renderCategoryTiles,
+    explore: renderExploreTiles,
+    social: renderSocial,
+    product: renderProducts,
+  };
+  renderers[kind]?.();
+}
+
+async function handleMediaUpload(file, targetKey) {
+  if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+    throw new Error("Please choose an image or video file.");
+  }
+  const dataUrl = await readFileAsDataURL(file);
+  applyMediaUpload(targetKey, dataUrl, file);
+}
+
 function renderNav() {
   const wrap = document.getElementById("navList");
   wrap.innerHTML = state.navigation
@@ -102,7 +165,7 @@ function renderCategoryTiles() {
             <option value="instagram" ${tile.mediaType === "instagram" ? "selected" : ""}>Instagram Reel</option>
           </select>
         </label>
-        <label>Media URL <input data-tile="${i}" data-field="mediaUrl" value="${val(tile.mediaUrl)}" /></label>
+        <label>Media URL ${urlFieldRow(`<input data-tile="${i}" data-field="mediaUrl" value="${val(tile.mediaUrl)}" />`, `tile:${i}:mediaUrl|mediaType:mediaType`)}</label>
         <label>Focus X <input type="number" data-tile="${i}" data-field="focusX" value="${tile.focusX ?? 50}" /></label>
         <label>Focus Y <input type="number" data-tile="${i}" data-field="focusY" value="${tile.focusY ?? 50}" /></label>
       </div>
@@ -156,7 +219,7 @@ function renderExploreTiles() {
               <option value="instagram" ${tile.mediaType === "instagram" ? "selected" : ""}>Instagram Reel</option>
             </select>
           </label>
-          <label>Media URL <input data-explore="${i}" data-field="mediaUrl" value="${val(tile.mediaUrl)}" /></label>
+          <label>Media URL ${urlFieldRow(`<input data-explore="${i}" data-field="mediaUrl" value="${val(tile.mediaUrl)}" />`, `explore:${i}:mediaUrl|mediaType:mediaType`)}</label>
           <label>Focus X <input type="number" data-explore="${i}" data-field="focusX" value="${tile.focusX ?? 50}" /></label>
           <label>Focus Y <input type="number" data-explore="${i}" data-field="focusY" value="${tile.focusY ?? 50}" /></label>
         </div>
@@ -182,7 +245,7 @@ function renderSocial() {
             <option value="instagram" ${item.mediaType === "instagram" ? "selected" : ""}>Instagram Reel</option>
           </select>
         </label>
-        <label>Media URL <input data-social="${i}" data-field="mediaUrl" value="${val(item.mediaUrl)}" /></label>
+        <label>Media URL ${urlFieldRow(`<input data-social="${i}" data-field="mediaUrl" value="${val(item.mediaUrl)}" />`, `social:${i}:mediaUrl|mediaType:mediaType`)}</label>
         <label>Focus X <input type="number" data-social="${i}" data-field="focusX" value="${item.focusX ?? 50}" /></label>
         <label>Focus Y <input type="number" data-social="${i}" data-field="focusY" value="${item.focusY ?? 50}" /></label>
       </div>
@@ -214,7 +277,7 @@ function renderProducts() {
             </select>
           </label>
           <label>Rating (1-5) <input type="number" min="1" max="5" data-product="${index}" data-field="rating" value="${product.rating ?? 5}" /></label>
-          <label>Image URL <input data-product="${index}" data-field="image" value="${val(product.image)}" /></label>
+          ${labeledUrlField("Image URL", `<input data-product="${index}" data-field="image" value="${val(product.image)}" />`, `product:${index}:image`, "image/*")}
         </div>
         <button type="button" data-remove-product="${index}" class="danger">Remove</button>
       </div>
@@ -235,6 +298,20 @@ function renderAll() {
 
 function bindEvents() {
   const form = document.getElementById("adminForm");
+
+  form.addEventListener("change", async (event) => {
+    const uploadInput = event.target;
+    if (!uploadInput.matches(".media-upload-input")) return;
+    const file = uploadInput.files?.[0];
+    if (!file) return;
+    try {
+      await handleMediaUpload(file, uploadInput.dataset.uploadTarget);
+      setStatus("File loaded from desktop. Click Save All Changes.");
+      uploadInput.value = "";
+    } catch (error) {
+      setStatus(error?.message || "Failed to load selected file.", true);
+    }
+  });
 
   form.addEventListener("input", (event) => {
     const t = event.target;
@@ -277,24 +354,6 @@ function bindEvents() {
       const v =
         t.type === "checkbox" ? t.checked : t.type === "number" ? Number(t.value) : t.value;
       setDeep(state, t.name, v);
-    }
-  });
-
-  document.getElementById("heroBannerUpload").addEventListener("change", async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    try {
-      const dataUrl = await readFileAsDataURL(file);
-      state.heroBanner.mediaUrl = dataUrl;
-      if (file.type.startsWith("video/")) {
-        state.heroBanner.mediaType = "video";
-      } else if (file.type.startsWith("image/")) {
-        state.heroBanner.mediaType = "image";
-      }
-      renderFormFields();
-      setStatus("Hero media loaded from desktop. Click Save All Changes.");
-    } catch {
-      setStatus("Failed to load selected file.", true);
     }
   });
 

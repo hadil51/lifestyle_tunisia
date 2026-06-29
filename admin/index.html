@@ -33,7 +33,16 @@
             <label>Brand Name <input name="site.brandName" /></label>
             <label>Brand Subtitle <input name="site.brandSubtitle" /></label>
             <label>Announcement Bar <input name="site.announcement" /></label>
-            <label>Logo URL <input name="site.logoUrl" placeholder="assets/logo.png or https://..." /></label>
+            <label>
+              Logo URL
+              <div class="url-field-row">
+                <input name="site.logoUrl" placeholder="assets/logo.png or https://..." />
+                <label class="upload-btn">
+                  Upload
+                  <input type="file" accept="image/*" class="media-upload-input" data-upload-target="path:site.logoUrl" />
+                </label>
+              </div>
+            </label>
           </div>
         </section>
 
@@ -54,17 +63,31 @@
                 <option value="instagram">Instagram Reel</option>
               </select>
             </label>
-            <label>Media URL <input name="heroBanner.mediaUrl" placeholder="image, video or Instagram reel URL" /></label>
-            <label>Video Poster URL <input name="heroBanner.videoPoster" placeholder="optional poster image URL" /></label>
+            <label>
+              Media URL
+              <div class="url-field-row">
+                <input name="heroBanner.mediaUrl" placeholder="image, video or Instagram reel URL" />
+                <label class="upload-btn">
+                  Upload
+                  <input type="file" accept="image/*,video/*" class="media-upload-input" data-upload-target="path:heroBanner.mediaUrl|mediaType:heroBanner.mediaType" />
+                </label>
+              </div>
+            </label>
+            <label>
+              Video Poster URL
+              <div class="url-field-row">
+                <input name="heroBanner.videoPoster" placeholder="optional poster image URL" />
+                <label class="upload-btn">
+                  Upload
+                  <input type="file" accept="image/*" class="media-upload-input" data-upload-target="path:heroBanner.videoPoster" />
+                </label>
+              </div>
+            </label>
             <label>Focus X (%) <input type="number" min="0" max="100" name="heroBanner.focusX" /></label>
             <label>Focus Y (%) <input type="number" min="0" max="100" name="heroBanner.focusY" /></label>
             <label>Overlay Opacity (0–0.85) <input type="number" step="0.01" min="0" max="0.85" name="heroBanner.overlayOpacity" /></label>
           </div>
           <div class="row">
-            <label>
-              Upload From Desktop (image/video)
-              <input id="heroBannerUpload" type="file" accept="image/*,video/*" />
-            </label>
             <label>
               <input type="checkbox" name="heroBanner.autoplay" />
               Autoplay video
@@ -109,10 +132,13 @@
             </label>
             <label>
               Media URL
-              <input
-                name="featuredVideo.mediaUrl"
-                placeholder="https://www.instagram.com/reel/DTLdfkrDbk0/"
-              />
+              <div class="url-field-row">
+                <input name="featuredVideo.mediaUrl" placeholder="https://www.instagram.com/reel/DTLdfkrDbk0/" />
+                <label class="upload-btn">
+                  Upload
+                  <input type="file" accept="image/*,video/*" class="media-upload-input" data-upload-target="path:featuredVideo.mediaUrl|mediaType:featuredVideo.mediaType" />
+                </label>
+              </div>
             </label>
             <label>Height (px: 280–800) <input type="number" min="280" max="800" name="featuredVideo.height" /></label>
             <label>Focus X (%) <input type="number" min="0" max="100" name="featuredVideo.focusX" /></label>

@@ -72,6 +72,42 @@ textarea {
   font: inherit;
 }
 
+.url-field-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+  margin-top: 0.3rem;
+}
+
+.url-field-row input:not([type="file"]) {
+  flex: 1;
+  margin-top: 0;
+  min-width: 0;
+}
+
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0.55rem 0.85rem;
+  background: #eee;
+  border: 1px solid #d6d6d6;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  color: #1d1d1d;
+}
+
+.upload-btn:hover {
+  background: #e2e2e2;
+}
+
+.upload-btn input[type="file"] {
+  display: none;
+}
+
 textarea {
   min-height: 70px;
   resize: vertical;
