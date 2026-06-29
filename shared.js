@@ -126,6 +126,10 @@ function generateDefaultProducts(sectionKey, count, startId) {
 }
 
 function defaultContent() {
+  if (window.SITE_DEFAULT_CONTENT) {
+    return JSON.parse(JSON.stringify(window.SITE_DEFAULT_CONTENT));
+  }
+
   const latest = generateDefaultProducts("latest", 12, 1);
   const formal = generateDefaultProducts("formal", 12, 100);
   const casual = generateDefaultProducts("casual", 12, 200);
@@ -305,29 +309,91 @@ function defaultContent() {
   };
 }
 
+function normalizeLegacyContent(saved) {
+  if (!saved || typeof saved !== "object") return saved;
+
+  const normalized = { ...saved };
+
+  if (saved.site?.footerBrand && !saved.site?.brandSubtitle) {
+    normalized.site = {
+      ...saved.site,
+      brandSubtitle: saved.site.footerBrand,
+    };
+  }
+
+  if (saved.hero && !saved.heroBanner) {
+    const hero = saved.hero;
+    normalized.heroBanner = {
+      title: hero.title || "",
+      subtitle: [hero.kicker, hero.subtitle].filter(Boolean).join(". "),
+      ctaText: hero.ctaText || "Shop Men's Collection",
+      ctaLink: hero.ctaLink || "#men-latest",
+      mediaType: hero.mediaType || "image",
+      mediaUrl: hero.mediaUrl || "",
+      videoPoster: hero.videoPoster || "",
+      autoplay: hero.autoplay !== false,
+      loop: hero.loop !== false,
+      muted: hero.muted !== false,
+      playsinline: hero.playsinline !== false,
+      focusX: hero.focusX ?? 50,
+      focusY: hero.focusY ?? 45,
+      overlayOpacity: hero.overlayOpacity ?? 0.42,
+    };
+  }
+
+  if (saved.sections) {
+    const sections = saved.sections;
+    if (!saved.productSections?.length) {
+      normalized.productSections = [
+        { key: "latest", title: sections.productsTitle || "Latest Men's Products", subtitle: sections.productsSubtitle || "" },
+        { key: "formal", title: "Men's Formal", subtitle: sections.collectionsSubtitle || "" },
+        { key: "casual", title: "Men's Casual", subtitle: sections.collectionsSubtitle || "" },
+        { key: "street", title: "Men's Street", subtitle: sections.collectionsSubtitle || "" },
+      ];
+    }
+    normalized.explore = {
+      ...(normalized.explore || {}),
+      title: sections.aboutTitle || normalized.explore?.title,
+      paragraph1: sections.aboutText || normalized.explore?.paragraph1,
+    };
+  }
+
+  if (saved.products?.length && !saved.products[0]?.section) {
+    const sectionKeys = ["latest", "formal", "casual", "street"];
+    normalized.products = saved.products.map((product, index) => ({
+      ...product,
+      section: sectionKeys[Math.min(Math.floor(index / 15), sectionKeys.length - 1)],
+      rating: product.rating ?? 5,
+    }));
+  }
+
+  return normalized;
+}
+
 function mergeContent(base, saved) {
+  const incoming = normalizeLegacyContent(saved);
   const merged = {
     ...base,
-    ...saved,
-    site: { ...base.site, ...(saved?.site || {}) },
-    heroBanner: { ...base.heroBanner, ...(saved?.heroBanner || {}) },
+    ...incoming,
+    site: { ...base.site, ...(incoming?.site || {}) },
+    heroBanner: { ...base.heroBanner, ...(incoming?.heroBanner || {}) },
     explore: {
       ...base.explore,
-      ...(saved?.explore || {}),
-      tiles: saved?.explore?.tiles?.length ? saved.explore.tiles : base.explore.tiles,
+      ...(incoming?.explore || {}),
+      tiles: incoming?.explore?.tiles?.length ? incoming.explore.tiles : base.explore.tiles,
     },
     social: {
       ...base.social,
-      ...(saved?.social || {}),
-      items: saved?.social?.items?.length ? saved.social.items : base.social.items,
+      ...(incoming?.social || {}),
+      items: incoming?.social?.items?.length ? incoming.social.items : base.social.items,
     },
-    featuredVideo: { ...base.featuredVideo, ...(saved?.featuredVideo || {}) },
-    newsletter: { ...base.newsletter, ...(saved?.newsletter || {}) },
-    footer: { ...base.footer, ...(saved?.footer || {}) },
-    navigation: saved?.navigation?.length ? saved.navigation : base.navigation,
-    categoryTiles: saved?.categoryTiles?.length ? saved.categoryTiles : base.categoryTiles,
-    productSections: saved?.productSections?.length ? saved.productSections : base.productSections,
-    products: saved?.products?.length ? saved.products : base.products,
+    featuredVideo: { ...base.featuredVideo, ...(incoming?.featuredVideo || {}) },
+    newsletter: { ...base.newsletter, ...(incoming?.newsletter || {}) },
+    footer: { ...base.footer, ...(incoming?.footer || {}) },
+    navigation: incoming?.navigation?.length ? incoming.navigation : base.navigation,
+    categoryTiles: incoming?.categoryTiles?.length ? incoming.categoryTiles : base.categoryTiles,
+    productSections: incoming?.productSections?.length ? incoming.productSections : base.productSections,
+    products: incoming?.products?.length ? incoming.products : base.products,
   };
   return merged;
 }
