@@ -6,12 +6,13 @@ import vm from "node:vm";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, "..");
 const configJs = readFileSync(join(root, "config.js"), "utf8");
+const mapperJs = readFileSync(join(root, "content-mapper.js"), "utf8");
 const contentDefaultJs = readFileSync(join(root, "content-default.js"), "utf8");
 const sharedJs = readFileSync(join(root, "shared.js"), "utf8");
 
 const context = { window: {} };
 vm.createContext(context);
-vm.runInContext(configJs + "\n" + contentDefaultJs + "\n" + sharedJs, context);
+vm.runInContext(configJs + "\n" + mapperJs + "\n" + contentDefaultJs + "\n" + sharedJs, context);
 
 const content = context.defaultContent();
 const { url, anonKey } = context.getSupabaseConfig();

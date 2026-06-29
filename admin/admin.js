@@ -384,13 +384,15 @@ function bindEvents() {
     const text = document.getElementById("importJsonText").value.trim();
     if (!text) return setStatus("Paste JSON first.", true);
     try {
-      state = mergeContent(defaultContent(), JSON.parse(text));
+      const parsed = JSON.parse(text);
+      state = importContent(parsed);
       renderAll();
       const result = await saveContent(state);
       const message = formatSaveResult(result);
-      setStatus(message.isError ? message.text : "JSON imported and saved.", message.isError);
-    } catch {
-      setStatus("Invalid JSON.", true);
+      const label = isLegacyUserContent(parsed) ? "Legacy JSON imported, converted, and saved." : "JSON imported and saved.";
+      setStatus(message.isError ? message.text : label, message.isError);
+    } catch (error) {
+      setStatus(`Invalid JSON: ${error?.message || "parse error"}`, true);
     }
   });
 }

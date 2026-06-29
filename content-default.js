@@ -220,7 +220,7 @@ window.SITE_DEFAULT_CONTENT = {
       "name": "Black Slim Fit Shirt",
       "price": "89 TND",
       "category": "Men",
-      "image": "https://www.instagram.com/reel/DTLdfkrDbk0/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==",
+      "image": "https://picsum.photos/seed/lifestyle-men-1/800/1000",
       "section": "latest",
       "rating": 5
     },

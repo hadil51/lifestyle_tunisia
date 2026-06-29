@@ -371,6 +371,10 @@ function normalizeLegacyContent(saved) {
 }
 
 function mergeContent(base, saved) {
+  if (isLegacyUserContent(saved)) {
+    return mapUserContentToSite(saved);
+  }
+
   const incoming = normalizeLegacyContent(saved);
   const merged = {
     ...base,

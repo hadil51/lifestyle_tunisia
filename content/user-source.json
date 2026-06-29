@@ -28,7 +28,7 @@
     "aboutText": "lifestyle_tunisia is a men-only fashion brand focused on premium fabrics, clean cuts, and everyday elegance."
   },
   "products": [
-    { "id": 1, "name": "Black Slim Fit Shirt", "price": "89 TND", "category": "Men", "image": "https://www.instagram.com/reel/DTLdfkrDbk0/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==" },
+    { "id": 1, "name": "Black Slim Fit Shirt", "price": "89 TND", "category": "Men", "image": "https://picsum.photos/seed/lifestyle-men-1/800/1000" },
     { "id": 2, "name": "White Premium Polo", "price": "96 TND", "category": "Men", "image": "https://picsum.photos/seed/lifestyle-men-2/800/1000" },
     { "id": 3, "name": "Navy Cotton T-Shirt", "price": "103 TND", "category": "Men", "image": "https://picsum.photos/seed/lifestyle-men-3/800/1000" },
     { "id": 4, "name": "Olive Tailored Blazer", "price": "110 TND", "category": "Men", "image": "https://picsum.photos/seed/lifestyle-men-4/800/1000" },
