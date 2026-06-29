@@ -1,4 +1,60 @@
 const STORAGE_KEY = "lifestyle_tunisia_content_v2";
+const SUPABASE_TABLE = "site_content";
+const SUPABASE_ROW_ID = "main";
+
+function getSupabaseConfig() {
+  const config = window.SUPABASE_CONFIG || {};
+  return {
+    url: String(config.url || "").replace(/\/+$/, ""),
+    anonKey: String(config.anonKey || ""),
+  };
+}
+
+function isSupabaseConfigured() {
+  const { url, anonKey } = getSupabaseConfig();
+  return Boolean(url && anonKey);
+}
+
+function supabaseHeaders() {
+  const { anonKey } = getSupabaseConfig();
+  return {
+    apikey: anonKey,
+    Authorization: `Bearer ${anonKey}`,
+    "Content-Type": "application/json",
+  };
+}
+
+async function fetchSupabaseContent() {
+  const { url } = getSupabaseConfig();
+  const endpoint = `${url}/rest/v1/${SUPABASE_TABLE}?id=eq.${encodeURIComponent(SUPABASE_ROW_ID)}&select=content&limit=1`;
+  const response = await fetch(endpoint, {
+    method: "GET",
+    headers: supabaseHeaders(),
+  });
+  if (!response.ok) throw new Error(`Supabase read failed (${response.status})`);
+  const data = await response.json();
+  return data?.[0]?.content || null;
+}
+
+async function upsertSupabaseContent(content) {
+  const { url } = getSupabaseConfig();
+  const endpoint = `${url}/rest/v1/${SUPABASE_TABLE}?on_conflict=id`;
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      ...supabaseHeaders(),
+      Prefer: "resolution=merge-duplicates,return=minimal",
+    },
+    body: JSON.stringify([
+      {
+        id: SUPABASE_ROW_ID,
+        content,
+        updated_at: new Date().toISOString(),
+      },
+    ]),
+  });
+  if (!response.ok) throw new Error(`Supabase write failed (${response.status})`);
+}
 
 function parseInstagramId(url) {
   const match = String(url || "").match(/instagram\.com\/(?:reel|p|tv)\/([A-Za-z0-9_-]+)/);
@@ -268,8 +324,20 @@ function mergeContent(base, saved) {
   return merged;
 }
 
-function loadContent() {
+async function loadContent() {
   const base = defaultContent();
+  if (isSupabaseConfigured()) {
+    try {
+      const remote = await fetchSupabaseContent();
+      if (remote) {
+        const merged = mergeContent(base, remote);
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+        return merged;
+      }
+    } catch (error) {
+      console.error("Failed to load content from Supabase:", error);
+    }
+  }
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return base;
@@ -280,13 +348,23 @@ function loadContent() {
   }
 }
 
-function saveContent(content) {
+async function saveContent(content) {
+  let savedRemotely = false;
+  if (isSupabaseConfigured()) {
+    try {
+      await upsertSupabaseContent(content);
+      savedRemotely = true;
+    } catch (error) {
+      console.error("Failed to save content to Supabase:", error);
+    }
+  }
+
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(content));
     return true;
   } catch (error) {
     console.error("Failed to save content:", error);
-    return false;
+    return savedRemotely;
   }
 }
 

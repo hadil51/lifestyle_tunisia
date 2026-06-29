@@ -23,7 +23,7 @@ function val(v) {
   return String(v ?? "").replace(/"/g, "&quot;");
 }
 
-let state = loadContent();
+let state = defaultContent();
 let productFilter = "";
 
 function renderFormFields() {
@@ -329,33 +329,40 @@ function bindEvents() {
     renderProducts();
   });
 
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    if (!saveContent(state)) {
+    const saved = await saveContent(state);
+    if (!saved) {
       setStatus(
         "Save failed: file too large for browser storage. Use a smaller/compressed video or paste a hosted URL.",
         true
       );
       return;
     }
-    setStatus("Saved! Refresh the website to see changes.");
+    setStatus("Saved! Website now reads this content from Supabase/local cache.");
   });
 
-  document.getElementById("resetDefault").addEventListener("click", () => {
+  document.getElementById("resetDefault").addEventListener("click", async () => {
     state = defaultContent();
     renderAll();
-    if (!saveContent(state)) {
+    const saved = await saveContent(state);
+    if (!saved) {
       setStatus("Reset done, but could not persist in browser storage.", true);
       return;
     }
     setStatus("Reset to default.");
   });
 
-  document.getElementById("clearStorage").addEventListener("click", () => {
+  document.getElementById("clearStorage").addEventListener("click", async () => {
     localStorage.removeItem(STORAGE_KEY);
     state = defaultContent();
     renderAll();
-    setStatus("Saved data cleared.");
+    const saved = await saveContent(state);
+    if (!saved) {
+      setStatus("Local data cleared, but default content could not be synced.", true);
+      return;
+    }
+    setStatus("Saved data cleared and reset to defaults.");
   });
 
   document.getElementById("exportJson").addEventListener("click", () => {
@@ -365,13 +372,14 @@ function bindEvents() {
     setStatus("JSON exported below (and copied if allowed).");
   });
 
-  document.getElementById("importJsonBtn").addEventListener("click", () => {
+  document.getElementById("importJsonBtn").addEventListener("click", async () => {
     const text = document.getElementById("importJsonText").value.trim();
     if (!text) return setStatus("Paste JSON first.", true);
     try {
       state = mergeContent(defaultContent(), JSON.parse(text));
       renderAll();
-      if (!saveContent(state)) {
+      const saved = await saveContent(state);
+      if (!saved) {
         setStatus("Imported, but file set is too large to save in browser storage.", true);
         return;
       }
@@ -382,5 +390,16 @@ function bindEvents() {
   });
 }
 
-renderAll();
-bindEvents();
+async function initAdmin() {
+  renderAll();
+  bindEvents();
+  try {
+    state = await loadContent();
+    renderAll();
+    setStatus("Content loaded. Edit and click Save All Changes.");
+  } catch {
+    setStatus("Could not load remote content. Using local/default data.", true);
+  }
+}
+
+initAdmin();

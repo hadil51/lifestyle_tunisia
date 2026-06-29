@@ -251,8 +251,8 @@ function setupRevealAnimations() {
   document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
 }
 
-function render() {
-  const content = loadContent();
+async function render() {
+  const content = await loadContent();
 
   document.getElementById("brandName").textContent = content.site.brandName;
   document.getElementById("brandSubtitle").textContent = content.site.brandSubtitle;
