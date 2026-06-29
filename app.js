@@ -46,7 +46,7 @@ function renderProductCard(product) {
   return `
     <article class="product-card">
       <div class="product-image-wrap">
-        <img src="${escapeHtml(normalizeAssetPath(product.image))}" alt="${escapeHtml(product.name)}" loading="lazy" />
+        ${buildProductMediaHtml(product)}
         <div class="product-actions">
           <span title="View">👁</span>
           <span title="Favorite">★</span>

@@ -118,6 +118,7 @@ function generateDefaultProducts(sectionKey, count, startId) {
       price: `${price} TND`,
       category: "Men",
       section: sectionKey,
+      mediaType: "image",
       rating: 5,
       image: `https://picsum.photos/seed/lsb-${sectionKey}-${i + 1}/800/1000`,
     });
@@ -464,6 +465,22 @@ function mediaPosition(item) {
   const x = Math.max(0, Math.min(100, Number(item?.focusX) || 50));
   const y = Math.max(0, Math.min(100, Number(item?.focusY) || 50));
   return `${x}% ${y}%`;
+}
+
+function resolveProductMediaType(product) {
+  if (product?.mediaType === "video") return "video";
+  const url = String(product?.image || "");
+  if (url.startsWith("data:video/")) return "video";
+  if (/\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(url)) return "video";
+  return "image";
+}
+
+function buildProductMediaHtml(product) {
+  const url = normalizeAssetPath(product.image || "");
+  if (resolveProductMediaType(product) === "video") {
+    return `<video class="product-media" src="${escapeHtml(url)}" autoplay muted loop playsinline></video>`;
+  }
+  return `<img class="product-media" src="${escapeHtml(url)}" alt="${escapeHtml(product.name)}" loading="lazy" />`;
 }
 
 function buildMediaHtml(item, className = "media-fill") {

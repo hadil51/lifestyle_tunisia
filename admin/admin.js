@@ -276,8 +276,15 @@ function renderProducts() {
               <option value="street" ${product.section === "street" ? "selected" : ""}>Men's Street</option>
             </select>
           </label>
+          <label>
+            Media Type
+            <select data-product="${index}" data-field="mediaType">
+              <option value="image" ${(product.mediaType || "image") === "image" ? "selected" : ""}>Image</option>
+              <option value="video" ${product.mediaType === "video" ? "selected" : ""}>Video</option>
+            </select>
+          </label>
           <label>Rating (1-5) <input type="number" min="1" max="5" data-product="${index}" data-field="rating" value="${product.rating ?? 5}" /></label>
-          ${labeledUrlField("Image URL", `<input data-product="${index}" data-field="image" value="${val(product.image)}" />`, `product:${index}:image`, "image/*")}
+          ${labeledUrlField("Media URL", `<input data-product="${index}" data-field="image" value="${val(product.image)}" />`, `product:${index}:image|mediaType:mediaType`, "image/*,video/*")}
         </div>
         <button type="button" data-remove-product="${index}" class="danger">Remove</button>
       </div>
@@ -396,6 +403,7 @@ function bindEvents() {
       category: "Men",
       section: productFilter || "latest",
       rating: 5,
+      mediaType: "image",
       image: "assets/template-reference.png",
     });
     renderProducts();

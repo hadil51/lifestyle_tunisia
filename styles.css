@@ -325,14 +325,18 @@ a {
   overflow: hidden;
 }
 
-.product-image-wrap img {
+.product-image-wrap img,
+.product-image-wrap video,
+.product-image-wrap .product-media {
   width: 100%;
   aspect-ratio: 4 / 5;
   object-fit: cover;
   transition: transform 0.35s ease;
 }
 
-.product-card:hover .product-image-wrap img {
+.product-card:hover .product-image-wrap img,
+.product-card:hover .product-image-wrap video,
+.product-card:hover .product-image-wrap .product-media {
   transform: scale(1.04);
 }
 

@@ -22,6 +22,7 @@ function assignProductSections(products) {
     ...product,
     image: sanitizeProductImage(product.image, product.id ?? index + 1),
     section: PRODUCT_SECTION_KEYS[Math.min(Math.floor(index / PRODUCTS_PER_SECTION), PRODUCT_SECTION_KEYS.length - 1)],
+    mediaType: product.mediaType || "image",
     rating: product.rating ?? 5,
   }));
 }
